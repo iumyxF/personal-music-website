@@ -16,16 +16,16 @@ spring:
 
   #在windows本地部署不用配置,可以删掉这段配置
   redis:
-    host: #在服务器上则写上服务器的ip地址
+    host: localhost
     port: 6379
     password: #密码(默认没有密码)
 
   datasource:
     druid:
       driver-class-name: com.mysql.cj.jdbc.Driver
-      url: jdbc:mysql://ip地址:端口号(默认为3306)/music?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai
-      username: #用户名
-      password: #密码
+      url: jdbc:mysql://localhost:3306/music?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai
+      username: root
+      password: 11111111
 
 token:
   expireTime: 259200000
@@ -48,3 +48,7 @@ mybatis-plus:
   global-config:
     db-config:
       id-type: assign_id
+
+bailian:
+  apiKey: xxx
+  appId: xxx
