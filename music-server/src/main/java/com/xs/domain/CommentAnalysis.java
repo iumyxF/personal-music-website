@@ -1,6 +1,7 @@
 package com.xs.domain;
 
 import com.baomidou.mybatisplus.annotation.TableField;
+import com.baomidou.mybatisplus.annotation.TableName;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import com.xs.enums.EmotionEnums;
@@ -15,6 +16,7 @@ import java.time.LocalDateTime;
  * @description:
  * @date 2025-11-07 09:15
  */
+@TableName("comment_analysis")
 @Data
 public class CommentAnalysis implements Serializable {
 

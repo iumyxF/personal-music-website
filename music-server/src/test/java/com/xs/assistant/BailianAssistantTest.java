@@ -1,10 +1,22 @@
 package com.xs.assistant;
 
-import com.xs.dto.assistant.CommentAnalysisRequest;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.xs.domain.Comment;
+import com.xs.domain.CommentAnalysis;
+import com.xs.domain.Singer;
+import com.xs.domain.Song;
+import com.xs.service.CommentAnalysisService;
+import com.xs.service.CommentService;
+import com.xs.service.SingerService;
+import com.xs.service.SongService;
+import com.xs.util.JacksonUtils;
+import org.apache.commons.lang3.RandomUtils;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.util.CollectionUtils;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -16,71 +28,133 @@ import java.util.List;
 class BailianAssistantTest {
 
     @Autowired
-    private BailianAssistant bailianAssistant;
+    SingerService singerService;
+    @Autowired
+    SongService songService;
+    @Autowired
+    CommentService commentService;
+    @Autowired
+    CommentAnalysisService commentAnalysisService;
 
     @Test
     void analysisComment() {
-        CommentAnalysisRequest request = new CommentAnalysisRequest();
-        request.setSongId("Song_1230001231283121");
-        request.setSongName("我们万岁");
-        request.setLyrics("渐渐头上染了白你一样很美\n" +
-                "纯粹发自我真心别皱眉\n" +
-                "月亮是否仍然认得当天的你\n" +
-                "约会每一刻亦带着孩子气\n" +
-                "常为碎事而庆祝\n" +
-                "怀念幼稚时犯的错\n" +
-                "真想与你重游那快乐故地\n" +
-                "情人游天地日月换行李\n" +
-                "如果失忆我渴望再多一次认识你\n" +
-                "与你说些无聊事挽手几千里\n" +
-                "证明可不舍不弃吻停不知几多岁的你\n" +
-                "特别鸣谢你制造更欢乐的我\n" +
-                "除了每月有几天受折磨\n" +
-                "段段日子回头望清怎么走过\n" +
-                "确定这碉堡没有事能攻破\n" +
-                "曾为愤怒而痛哭\n" +
-                "回望厌闷时越的界\n" +
-                "珍惜有你仍然会对着我坐\n" +
-                "情人游天地日月换行李\n" +
-                "如果失忆我渴望再多一次认识你\n" +
-                "与你说些无聊事挽手几千里\n" +
-                "证明可不舍不弃吻停你到下世纪\n" +
-                "变幻继续变幻拆不开\n" +
-                "我们已成我们还好有爱在怀中感慨\n" +
-                "笑着喊着抱着如万世不朽只有爱\n" +
-                "多好能拥抱未来\n" +
-                "情人游天地日月换行李\n" +
-                "从今开始懒理会世间一切是与非\n" +
-                "与你说些无聊事再走几千里\n" +
-                "永恒的不舍不弃降临你我合葬的墓碑\n" +
-                "我要好好珍惜你\n" +
-                "能重头享受爱你");
-        request.setSongAnalysis("陈奕迅的歌曲《我们万岁》是一首充满深情和温暖的情歌，它讲述了一段长久而深刻的爱情故事。这首歌通过细腻的歌词和旋律，传达了对伴侣的无限珍惜和对未来的共同期待。\n" +
-                "歌词中，“渐渐头上染了白你一样很美，纯粹发自我真心别皱眉”描绘了随着时间的流逝，尽管容颜老去，但在爱人眼中，对方依然美丽如初。这种情感的真挚和纯粹，是爱情中最为动人的部分。\n" +
-                "“月亮是否仍然认得当天的你，约会每一刻亦带着孩子气”则回忆起两人相识相爱的点点滴滴，那份纯真和快乐仿佛就在昨天，让人怀念。\n" +
-                "“常为碎事而庆祝，怀念幼稚时犯的错”表达了两人在一起的生活中，即使是最微小的事情也能成为庆祝的理由，那些年轻时的幼稚和错误也成为了珍贵的回忆。\n" +
-                "“真想与你重游那快乐故地”则透露出想要与爱人一起重温过去美好时光的愿望，这种愿望充满了对过去美好记忆的怀念和对未来的期待。\n" +
-                "“情人游天地日月换行李”象征着两人一起走过的岁月，无论世界如何变迁，他们的爱情始终如一。\n" +
-                "“如果失忆我渴望再多一次认识你”表达了即使失去记忆，也希望能够重新认识并爱上对方，这种情感的深度和执着让人动容。\n" +
-                "“与你说些无聊事挽手几千里”则描绘了两人在一起的平凡日常，即使是最无聊的事情，只要和对方一起，也能变得有趣和珍贵。\n" +
-                "“证明可不舍不弃吻停不知几多岁的你”强调了无论岁月如何变迁，他们的爱情始终坚定不移，这种承诺和坚守是爱情中最坚实的基石。\n" +
-                "“特别鸣谢你制造更欢乐的我”则是对爱人的感激之情，感谢对方让自己的生活变得更加快乐和充实。\n" +
-                "“除了每月有几天受折磨”可能指的是两人在一起时偶尔的小摩擦和不愉快，但这些小插曲并不影响他们之间的深厚感情。\n" +
-                "“段段日子回头望清怎么走过，确定这碉堡没有事能攻破”则表达了两人一起经历的风风雨雨，他们的关系坚不可摧，任何困难都无法将他们分开。\n" +
-                "“曾为愤怒而痛哭，回望厌闷时越的界”回忆起两人在一起时的争吵和误解，但这些经历最终都成为了他们感情的试金石，让他们的关系更加坚固。\n" +
-                "“珍惜有你仍然会对着我坐”则是对爱人的珍视和感激，感谢对方始终陪伴在自己身边，给予支持和安慰。\n" +
-                "“情人游天地日月换行李，从今开始懒理会世间一切是与非”表达了两人决定抛开世俗的纷扰，只专注于彼此的爱情，享受两人世界的美好。\n" +
-                "“与你说些无聊事再走几千里”再次强调了两人在一起的平凡日常，即使是最无聊的事情，也能成为他们共同的回忆和乐趣。\n" +
-                "“永恒的不舍不弃降临你我合葬的墓碑”则是对未来的承诺，即使生命终结，他们的爱情也将永恒不变，这种情感的深度和执着让人感动。\n" +
-                "“我要好好珍惜你”是整首歌的总结，表达了对爱人的珍视和感激，感谢对方给予的爱和陪伴，也承诺将这份爱情好好珍惜。\n" +
-                "总的来说，《我们万岁》是一首充满深情和温暖的情歌，它通过细腻的歌词和旋律，传达了对伴侣的无限珍惜和对未来的共同期待。这首歌让人感受到爱情的力量和美好，也让人对爱情充满期待和向往。");
+        // 初始化数据
+        Singer singer = initSinger();
+        Song song = initSong(singer.getId());
+        initComment(song.getId(),
+                List.of("这首歌可不只是比喻爱情噢，当你执着做一件事的时候结果往往会跟你想的不一样，甚至没有结果，但不要灰心丧气，葡萄一定会成熟的，就算不成熟也可以用来酿酒，自醉自救",
+                        "‘我知日后 路上或没有更美的邂逅’。骆夏 向暖 很好听",
+                        "祝大家冬至快乐",
+                        "我是渣渣辉，是兄弟就来砍我")
+        );
+        List<CommentAnalysis> commentAnalysisList = commentAnalysisService.doAnalysis(song.getId());
+        if (CollectionUtils.isEmpty(commentAnalysisList)) {
+            System.out.println("分析结果 null");
+        } else {
+            System.out.println(JacksonUtils.writeValueAsString(commentAnalysisList));
+        }
+    }
 
-        request.setUserContentList(List.of(new CommentAnalysisRequest.UserContent("10001", "情人不配游天地，日月嘿嘿嘿"),
-                new CommentAnalysisRequest.UserContent("10002", "情人游天地 日月换行李"),
-                new CommentAnalysisRequest.UserContent("10003", "这首歌是真的很美好，这首歌表达了正真的热爱，不是情侣热恋期的那种互相喜欢的甜，而是两人经历了事后依然爱着对方的细水流长、岁月静好的爱")));
+    Singer initSinger() {
+        Singer singer = singerService.getOne(new LambdaQueryWrapper<Singer>()
+                .eq(Singer::getName, "陈奕迅"));
+        if (null == singer) {
+            singer = new Singer();
+            singer.setName("陈奕迅");
+            singer.setSex(1);
+            singerService.save(singer);
+        }
+        return singer;
+    }
 
-        String result = bailianAssistant.analysisComment(request);
-        System.out.println("###");
-        System.out.println(result);
+    Song initSong(Long singerId) {
+        Song song = songService.getOne(new LambdaQueryWrapper<Song>()
+                .eq(Song::getName, "葡萄成熟时"));
+        if (null == song) {
+            song = new Song();
+            song.setLyric("""
+                    差不多冬至一早一晚还是有雨
+                    当初的坚持现已令你很怀疑
+                    很怀疑你最尾等到只有这枯枝
+                    苦恋几多次悉心栽种全力灌注
+                    所得竟不如别个后辈收成时
+                    这一次你真的很介意
+                    但见旁人谈情何引诱
+                    问到何时葡萄先熟透
+                    你要静候再静候
+                    就算失收始终要守
+                    日后尽量别教今天的泪白流
+                    留低击伤你的石头
+                    从错误里吸收
+                    也许丰收月份尚未到你也得接受
+                    或者要到你将爱酿成醇酒
+                    时机先至熟透
+                    应该怎么爱可惜书里从没记载
+                    终于摸出来但岁月却不回来
+                    不回来错过了春天可会再花开
+                    一千种恋爱一些需要情泪灌溉
+                    枯毁的温柔
+                    在最后会长回来
+                    错的爱乃必经的配菜
+                    但见旁人谈情何引诱
+                    问到何时葡萄先熟透
+                    你要静候再静候
+                    就算失收始终要守
+                    日后尽量别教今天的泪白流
+                    留低击伤你的石头
+                    从错误里吸收
+                    也许丰收月份尚未到你也得接受
+                    或者要到你将爱酿成醇酒
+                    时机先至熟透
+                    想想天的一边亦有个某某在等候
+                    wo wo wo yeah yeah~~
+                    一心只等葡萄熟透
+                    尝杯酒wo wowow
+                    别让寂寞害你伤得一夜白头
+                    仍得不需要的自由
+                    和最耀眼伤口
+                    我知日后路上或没有更美的邂逅
+                    但当你智慧都蕴酿成红酒
+                    仍可一醉自救
+                    谁都辛酸过
+                    哪个没有""");
+            song.setName("葡萄成熟时");
+            song.setSingerId(singerId);
+            song.setIntroduction("""
+                    《葡萄成熟时》是陈奕迅的一首歌曲，歌词中运用了“葡萄成熟”这一比喻，讲述了一段经历挫折与等待的爱情故事。
+                    歌词解读：
+                    “差不多冬至一早一晚还是有雨”，这里借用了冬天寒冷、阴雨连绵的景象，映射出主人公内心的孤独和落寞。
+                    “当初的坚持现已令你很怀疑”，表明主人公在感情道路上遇到了困境，开始对自己的选择产生动摇。
+                    “苦恋几多次悉心栽种全力灌注，所得竟不如别个后辈收成时”，通过对比他人收获爱情的甜蜜，主人公感叹自己付出的努力并未得到相应的回报。
+                    “这一次你真的很介意”，表达了主人公内心对于失败的不甘心。
+                    “但见旁人谈情何引诱，问到何时葡萄先熟透。你要静候再静候，就算失收始终要守”，这里强调了即使面临失败也要保持耐心与坚持的重要性。
+                    “日后尽量别教今天的泪白流，留低击伤你的石头，从错误里吸收”，意味着要从过去的经历中吸取教训，并勇敢面对未来。
+                    “也许丰收月份尚未到你也得接受，或者要到你将爱酿成醇酒，时机先至熟透”，这句话传达了一个信息：有时候我们需要更多时间去等待真爱的到来。
+                    “应该怎么爱可惜书里从没记载，终于摸出来但岁月却不回来”，说明真正的爱情并没有固定的模式，每个人都需要在实践中摸索适合自己的方式。
+                    “不回来错过了春天可会再花开，一千种恋爱一些需要情泪灌溉”，这里暗示了虽然错过了某些机会，但只要继续努力，依然有机会获得幸福。
+                    “枯毁的温柔，在最后会长回来。错的爱乃必经的配菜”，表示即使是失败的感情经历，也能成为成长道路上宝贵的财富。
+                    “想想天的一边亦有个某某在等候”，鼓励人们相信总会有人在等待着自己。
+                    “一心只等葡萄熟透，尝杯酒。别让寂寞害你伤得一夜白头”，提醒大家不要因为寂寞而做出错误的选择。
+                    “仍得不需要的自由，和最耀眼伤口。我知日后路上或没有更美的邂逅，但当你智慧都酝酿成红酒，仍可一醉自救”，这里表达了即使经历过伤痛，也能通过自我提升找到新的希望。""");
+            songService.save(song);
+        }
+        return song;
+    }
+
+    void initComment(Long songId, List<String> contentList) {
+        List<Comment> list = commentService.list(new LambdaQueryWrapper<Comment>()
+                .eq(Comment::getSongId, songId));
+        if (!CollectionUtils.isEmpty(list)) {
+            return;
+        }
+        List<Comment> comments = new ArrayList<>(contentList.size());
+        contentList.forEach(content -> {
+            Comment c = new Comment();
+            c.setUserId(RandomUtils.nextLong());
+            c.setSongId(songId);
+            c.setContent(content);
+            comments.add(c);
+        });
+        commentService.saveBatch(comments);
     }
 }

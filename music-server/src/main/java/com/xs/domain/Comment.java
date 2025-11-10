@@ -61,6 +61,12 @@ public class Comment implements Serializable {
      */
     private Integer up;
 
+    /**
+     * 是否分析过
+     * 0-未分析 1-已分析
+     */
+    private Integer analyzed;
+
     @Serial
     private static final long serialVersionUID = 1L;
 }

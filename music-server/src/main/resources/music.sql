@@ -50,6 +50,7 @@ CREATE TABLE `comment`
     `content`      longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL COMMENT '评论内容',
     `create_time`  datetime                                                  NULL DEFAULT NULL COMMENT '评论时间',
     `up`           int                                                       NULL DEFAULT 0 COMMENT '评论点赞数',
+    `analyzed`     tinyint(1)                                                NULL DEFAULT NULL COMMENT '0-未分析 1-已分析',
     PRIMARY KEY (`id`) USING BTREE
 ) ENGINE = InnoDB
   CHARACTER SET = utf8mb4

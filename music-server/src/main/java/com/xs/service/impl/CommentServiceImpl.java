@@ -1,5 +1,7 @@
 package com.xs.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.xs.common.Result;
 import com.xs.domain.Comment;
@@ -9,6 +11,8 @@ import com.xs.service.CommentService;
 import com.xs.vo.CommentVo;
 import com.xs.vo.SearchVo;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
 import java.time.LocalDateTime;
@@ -19,9 +23,9 @@ import java.util.Objects;
  * @author xs
  * description 针对表【comment(评论)】的数据库操作Service实现
  * createDate 2022-10-11 16:10:41
-*/
+ */
 @Service
-public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> implements CommentService{
+public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> implements CommentService {
 
     @Resource
     private CommentMapper commentMapper;
@@ -180,8 +184,22 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
         }
         return Result.error("查询失败");
     }
+
+    @Override
+    public List<Comment> listBySongIdNotAnalysis(Long songId) {
+        return commentMapper.selectList(new LambdaQueryWrapper<Comment>()
+                .eq(Comment::getSongId, songId)
+                .eq(Comment::getAnalyzed, 0));
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    @Override
+    public void markAnalyzed(List<Long> commentIdList) {
+        if (CollectionUtils.isEmpty(commentIdList)) {
+            return;
+        }
+        commentMapper.update(null, new LambdaUpdateWrapper<Comment>()
+                .set(Comment::getAnalyzed, 1)
+                .in(Comment::getId, commentIdList));
+    }
 }
-
-
-
-

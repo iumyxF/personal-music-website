@@ -6,11 +6,13 @@ import com.xs.domain.Comment;
 import com.xs.dto.CommentDto;
 import com.xs.vo.SearchVo;
 
+import java.util.List;
+
 /**
  * @author xs
  * description 针对表【comment(评论)】的数据库操作Service
  * createDate 2022-10-11 16:10:41
-*/
+ */
 public interface CommentService extends IService<Comment> {
 
     /**
@@ -67,4 +69,14 @@ public interface CommentService extends IService<Comment> {
      * 按评论内容或用户名模糊搜索
      */
     Result searchComment(SearchVo searchVo);
+
+    /**
+     * 按歌曲id查询未分析的评论
+     */
+    List<Comment> listBySongIdNotAnalysis(Long songId);
+
+    /**
+     * 标记评论已分析
+     */
+    void markAnalyzed(List<Long> commentIdList);
 }

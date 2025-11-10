@@ -3,6 +3,8 @@ package com.xs.service;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.xs.domain.CommentAnalysis;
 
+import java.util.List;
+
 /**
  * @author iumyx
  * @description 针对表【comment_analysis(评论分析表)】的数据库操作Service
@@ -13,8 +15,8 @@ public interface CommentAnalysisService extends IService<CommentAnalysis> {
     /**
      * 评论分析
      *
-     * @param commentId 评论id
+     * @param songId 评论id
      * @return 评论分析结果
      */
-    CommentAnalysis doAnalysis(Long commentId);
+    List<CommentAnalysis> doAnalysis(Long songId);
 }

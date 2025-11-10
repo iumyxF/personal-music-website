@@ -13,7 +13,7 @@ import java.util.List;
  * description 针对表【comment(评论)】的数据库操作Mapper
  * createDate 2022-10-11 16:10:41
  * Entity com.xs.domain.Comment
-*/
+ */
 @Repository
 @Mapper
 public interface CommentMapper extends BaseMapper<Comment> {
