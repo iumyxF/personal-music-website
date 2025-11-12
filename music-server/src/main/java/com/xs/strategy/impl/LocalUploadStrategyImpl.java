@@ -2,12 +2,17 @@ package com.xs.strategy.impl;
 
 import com.xs.enums.FileExtEnum;
 import com.xs.exception.BizException;
+import com.xs.util.FileUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.*;
+import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
 import java.nio.file.Files;
-import java.util.Objects;
+import java.nio.file.StandardOpenOption;
+import java.util.Arrays;
+import java.util.Comparator;
 
 /**
  * 本地上传策略
@@ -36,45 +41,101 @@ public class LocalUploadStrategyImpl extends AbstractUploadStrategyImpl {
     public void upload(String path, String fileName, InputStream inputStream) throws IOException {
         // 判断目录是否存在
         File directory = new File(localPath + path);
-        if (!directory.exists()) {
-            if (!directory.mkdirs()) {
-                throw new BizException("创建目录失败");
-            }
+        if (!directory.exists() && !directory.mkdirs()) {
+            throw new BizException("创建目录失败");
         }
         // 写入文件
         File file = new File(localPath + path + fileName);
-        String ext = "." + fileName.split("\\.")[1];
-        switch (Objects.requireNonNull(FileExtEnum.getFileExt(ext))) {
-            case MD, TXT -> {
-                BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
-                BufferedWriter writer = new BufferedWriter(new FileWriter(file));
-                while (reader.ready()) {
-                    writer.write((char) reader.read());
+        String ext = FileUtils.getExtName(fileName);
+        if (FileExtEnum.getFileExt(ext) == FileExtEnum.MD || FileExtEnum.getFileExt(ext) == FileExtEnum.TXT) {
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+                 BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
+                int charRead;
+                while ((charRead = reader.read()) != -1) {
+                    writer.write(charRead);
                 }
                 writer.flush();
-                writer.close();
-                reader.close();
             }
-            default -> {
-                BufferedInputStream bis = new BufferedInputStream(inputStream);
-                BufferedOutputStream bos = new BufferedOutputStream(Files.newOutputStream(file.toPath()));
+        } else {
+            try (BufferedInputStream bis = new BufferedInputStream(inputStream);
+                 BufferedOutputStream bos = new BufferedOutputStream(Files.newOutputStream(file.toPath()))) {
                 byte[] bytes = new byte[1024];
                 int length;
                 while ((length = bis.read(bytes)) != -1) {
                     bos.write(bytes, 0, length);
                 }
                 bos.flush();
-                bos.close();
-                bis.close();
             }
         }
-        inputStream.close();
     }
 
+    @Override
+    public void uploadChunk(String path, String fileId, InputStream inputStream, long start) throws IOException {
+        // 创建目录
+        File directory = new File(localPath + path + "chunks" + File.separator + fileId + File.separator);
+        if (!directory.exists() && !directory.mkdirs()) {
+            throw new BizException("创建分片目录失败");
+        }
+        // 保存分片文件，使用起始位置作为分片文件名
+        File chunkFile = new File(directory, String.valueOf(start));
+        try (FileOutputStream fos = new FileOutputStream(chunkFile);
+             BufferedInputStream bis = new BufferedInputStream(inputStream)) {
+            byte[] buffer = new byte[1024];
+            int length;
+            while ((length = bis.read(buffer)) != -1) {
+                fos.write(buffer, 0, length);
+            }
+            fos.flush();
+        }
+    }
+
+    @Override
+    public void mergeChunk(String path, String fileId, String fileName) throws IOException {
+        // 分片目录
+        File chunksDir = new File(localPath + path + "chunks" + File.separator + fileId + File.separator);
+        if (!chunksDir.exists()) {
+            throw new BizException("分片目录不存在");
+        }
+        // 目标文件
+        File targetFile = new File(localPath + path + fileName);
+        // 确保目标文件的父目录存在
+        if (!targetFile.getParentFile().exists() && !targetFile.getParentFile().mkdirs()) {
+            throw new BizException("创建目标文件目录失败");
+        }
+        // 文件合并
+        try (FileChannel outChannel = FileChannel.open(targetFile.toPath(), StandardOpenOption.CREATE, StandardOpenOption.WRITE)) {
+            // 获取所有分片文件并按起始位置排序
+            File[] chunkFiles = chunksDir.listFiles();
+            if (chunkFiles == null || chunkFiles.length == 0) {
+                throw new BizException("没有找到分片文件");
+            }
+            // 排序
+            Arrays.sort(chunkFiles, Comparator.comparingLong(f -> Long.parseLong(f.getName())));
+            // 合并所有分片
+            ByteBuffer buffer = ByteBuffer.allocateDirect(1024 * 1024);
+            for (File chunkFile : chunkFiles) {
+                try (FileChannel inChannel = FileChannel.open(chunkFile.toPath(), StandardOpenOption.READ)) {
+                    buffer.clear();
+                    int bytesRead;
+                    while ((bytesRead = inChannel.read(buffer)) != -1) {
+                        // buffer切换成读模式输出文件数据
+                        buffer.flip();
+                        while (buffer.hasRemaining()) {
+                            outChannel.write(buffer);
+                        }
+                        buffer.clear();
+                    }
+                }
+                // 删除分片文件
+                chunkFile.delete();
+            }
+        }
+        // 删除分片目录
+        chunksDir.delete();
+    }
 
     @Override
     public String getFileAccessUrl(String filePath) {
         return localUrl + filePath;
     }
-
 }

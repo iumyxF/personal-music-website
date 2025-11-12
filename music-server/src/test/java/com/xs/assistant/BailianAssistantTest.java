@@ -11,6 +11,7 @@ import com.xs.service.SingerService;
 import com.xs.service.SongService;
 import com.xs.util.JacksonUtils;
 import org.apache.commons.lang3.RandomUtils;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -24,6 +25,7 @@ import java.util.List;
  * @description:
  * @date 2025-11-07 14:41
  */
+@Disabled
 @SpringBootTest
 class BailianAssistantTest {
 

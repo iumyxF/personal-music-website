@@ -2,7 +2,9 @@ package com.xs.controller;
 
 import com.xs.enums.FilePathEnum;
 import com.xs.strategy.context.UploadStrategyContext;
+import com.xs.util.FileUtils;
 import com.xs.vo.R;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -10,6 +12,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
 
+@Slf4j
 @RestController
 public class UploadController {
 
@@ -30,5 +33,31 @@ public class UploadController {
     @PostMapping("/uploadAudio")
     public R<String> uploadAudio(@RequestParam("mp3") MultipartFile file) {
         return R.ok(uploadStrategyContext.executeUploadStrategy(file, FilePathEnum.VOICE.getPath()));
+    }
+
+    @PostMapping("/uploadAudio/chunk")
+    public R<String> uploadChunk(@RequestParam MultipartFile file,
+                                 @RequestParam String fileId,
+                                 @RequestParam long start,
+                                 @RequestParam long totalSize,
+                                 @RequestParam boolean isLast) {
+        if (null == file) {
+            return R.fail("请选择文件");
+        }
+        try {
+            uploadStrategyContext.uploadFileChunk(file, fileId, start, totalSize, FilePathEnum.VOICE.getPath());
+            if (isLast) {
+                // 文件名 使用 MD5.后缀
+                String md5 = FileUtils.getMd5(file.getInputStream());
+                String extName = FileUtils.getExtName(file.getOriginalFilename());
+                String fileName = md5 + extName;
+                String fileUrl = uploadStrategyContext.mergeFileChunk(fileId, fileName, FilePathEnum.VOICE.getPath());
+                return R.ok("上传完成", fileUrl);
+            }
+            return R.ok("分片上传成功");
+        } catch (Exception e) {
+            log.error("分片上传失败,cause = {}", e.getMessage());
+            return R.fail("分片上传失败: " + e.getMessage());
+        }
     }
 }

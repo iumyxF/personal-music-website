@@ -1,8 +1,8 @@
 package com.xs.util;
 
-import com.baomidou.mybatisplus.core.toolkit.StringUtils;
-import lombok.extern.log4j.Log4j2;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.binary.Hex;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
@@ -14,7 +14,7 @@ import java.util.Objects;
 /**
  * 文件md5工具类
  */
-@Log4j2
+@Slf4j
 public class FileUtils {
 
     /**
@@ -33,7 +33,7 @@ public class FileUtils {
             }
             return new String(Hex.encodeHex(md5.digest()));
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error(e.getMessage());
             return null;
         } finally {
             try {
@@ -41,7 +41,7 @@ public class FileUtils {
                     inputStream.close();
                 }
             } catch (IOException e) {
-                e.printStackTrace();
+                log.error(e.getMessage());
             }
         }
     }
@@ -60,6 +60,23 @@ public class FileUtils {
     }
 
     /**
+     * 获取文件名
+     *
+     * @param fileName 文件名
+     * @return 文件名
+     */
+    public static String getFileNameNotExt(String fileName) {
+        if (StringUtils.isBlank(fileName)) {
+            return "";
+        }
+        int index = fileName.lastIndexOf(".");
+        if (index == -1) {
+            return fileName;
+        }
+        return fileName.substring(0, index);
+    }
+
+    /**
      * 转换file
      *
      * @param multipartFile 多部分文件
@@ -74,7 +91,7 @@ public class FileUtils {
             multipartFile.transferTo(file);
             file.deleteOnExit();
         } catch (IOException e) {
-            e.printStackTrace();
+            log.error(e.getMessage());
         }
         return file;
     }

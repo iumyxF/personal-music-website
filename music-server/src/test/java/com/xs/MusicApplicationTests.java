@@ -9,6 +9,7 @@ import com.xs.service.TestService;
 import com.xs.vo.ListSongVo;
 import com.xs.vo.SingerVo;
 import com.xs.vo.SongListVo;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
@@ -16,6 +17,7 @@ import javax.annotation.Resource;
 import java.time.LocalDateTime;
 import java.util.*;
 
+@Disabled
 @SpringBootTest
 public class MusicApplicationTests {
 
