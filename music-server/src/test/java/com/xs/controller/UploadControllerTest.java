@@ -9,6 +9,8 @@ import org.springframework.boot.test.web.server.LocalServerPort;
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -55,6 +57,82 @@ class UploadControllerTest {
             try (Response response = client.newCall(request).execute()) {
                 assertTrue(response.isSuccessful(), String.format("分片 %d/%d 上传失败，响应码：%d", chunkIndex + 1, totalChunks, response.code()));
             }
+        }
+    }
+
+    /**
+     * 测试获取已上传分片范围接口
+     */
+    @Test
+    void testGetUploadedChunks() throws IOException {
+        // 1. 准备原始文件并获取基本信息
+        File originalFile = new File(ORIGINAL_FILE_PATH);
+        long totalSize = originalFile.length();
+        String fileId = String.valueOf(System.currentTimeMillis());
+        int totalChunks = (int) Math.ceil((double) totalSize / CHUNK_SIZE); // 总分片数
+        System.out.println("文件总大小: " + totalSize + " bytes");
+        System.out.println("总分片数: " + totalChunks);
+
+        // 2. 上传除最后一片外的所有分片
+        List<Long> uploadedChunkStarts = new ArrayList<>();
+        int lastChunkIndex = totalChunks - 1;
+
+        for (int chunkIndex = 0; chunkIndex < totalChunks; chunkIndex++) {
+            // 跳过最后一个分片
+            if (chunkIndex == lastChunkIndex) {
+                System.out.println("跳过上传最后一个分片 (索引: " + chunkIndex + ")");
+                continue;
+            }
+
+            // 计算当前分片的起始位置和结束位置
+            long start = (long) chunkIndex * CHUNK_SIZE;
+            long end = Math.min(start + CHUNK_SIZE, totalSize);
+            boolean isLast = false; // 因为我们跳过了最后一个分片，所以这里设置为false
+
+            // 记录已上传的分片起始位置
+            uploadedChunkStarts.add(start);
+
+            System.out.println("上传分片 " + chunkIndex + "/" + totalChunks + ", 范围: " + start + "-" + end);
+
+            // 读取并上传分片
+            byte[] chunkBytes = readChunk(originalFile, start, end);
+            Request request = buildChunkRequest(url(), fileId, start, totalSize, isLast, chunkBytes, originalFile.getName());
+
+            try (Response response = client.newCall(request).execute()) {
+                assertTrue(response.isSuccessful(), String.format("分片 %d/%d 上传失败，响应码：%d", chunkIndex + 1, totalChunks - 1, response.code()));
+                System.out.println("分片 " + chunkIndex + " 上传成功");
+            }
+        }
+
+        // 3. 调用getUploadedChunks接口获取已上传分片范围
+        String getChunksUrl = url() + "?fileId=" + fileId;
+        Request getChunksRequest = new Request.Builder()
+                .url(getChunksUrl)
+                .get()
+                .build();
+
+        try (Response response = client.newCall(getChunksRequest).execute()) {
+            // 4. 验证响应成功
+            assertTrue(response.isSuccessful(), "获取已上传分片范围失败，响应码：" + response.code());
+
+            // 5. 解析响应内容
+            ResponseBody responseBody = response.body();
+            assertNotNull(responseBody, "响应体为空");
+            String responseJson = responseBody.string();
+
+            // 6. 验证响应中包含已上传的分片信息
+            System.out.println("已上传分片范围响应：" + responseJson);
+            assertTrue(responseJson.contains("data"), "响应中不包含data字段");
+
+            // 验证是否只缺少最后一片
+            // 计算最后一个分片的起始位置
+            long lastChunkStart = (long) lastChunkIndex * CHUNK_SIZE;
+            System.out.println("预期缺少的分片起始位置: " + lastChunkStart);
+
+            // 验证已上传的分片数量是总分片数减1
+            System.out.println("已上传分片数量: " + uploadedChunkStarts.size());
+            System.out.println("预期已上传分片数量: " + (totalChunks - 1));
+            assertEquals(totalChunks - 1, uploadedChunkStarts.size(), "已上传分片数量不正确");
         }
     }
 

@@ -5,10 +5,13 @@ import com.xs.strategy.context.UploadStrategyContext;
 import com.xs.util.FileUtils;
 import com.xs.vo.R;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.util.List;
 
 import javax.annotation.Resource;
 
@@ -59,5 +62,14 @@ public class UploadController {
             log.error("分片上传失败,cause = {}", e.getMessage());
             return R.fail("分片上传失败: " + e.getMessage());
         }
+    }
+
+    /**
+     * 查询已上传的分片范围
+     */
+    @GetMapping("/uploadAudio/chunk")
+    public R<List<Long>> getUploadedChunks(@RequestParam String fileId) {
+        List<Long> uploadedChunks = uploadStrategyContext.getUploadedChunks(fileId, FilePathEnum.VOICE.getPath());
+        return R.ok(uploadedChunks);
     }
 }

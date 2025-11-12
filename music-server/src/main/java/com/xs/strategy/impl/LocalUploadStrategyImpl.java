@@ -3,6 +3,7 @@ package com.xs.strategy.impl;
 import com.xs.enums.FileExtEnum;
 import com.xs.exception.BizException;
 import com.xs.util.FileUtils;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -11,12 +12,15 @@ import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.StandardOpenOption;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.List;
 
 /**
  * 本地上传策略
  */
+@Slf4j
 @Service("localUploadStrategyImpl")
 public class LocalUploadStrategyImpl extends AbstractUploadStrategyImpl {
 
@@ -137,5 +141,32 @@ public class LocalUploadStrategyImpl extends AbstractUploadStrategyImpl {
     @Override
     public String getFileAccessUrl(String filePath) {
         return localUrl + filePath;
+    }
+
+    @Override
+    public List<Long> getUploadedChunkList(String path, String fileId) {
+        List<Long> uploadedChunks = new ArrayList<>();
+        // 分片目录
+        File chunksDir = new File(localPath + path + "chunks" + File.separator + fileId + File.separator);
+        // 检查分片目录是否存在
+        if (chunksDir.exists() && chunksDir.isDirectory()) {
+            // 获取目录中的所有分片文件
+            File[] chunkFiles = chunksDir.listFiles();
+            if (chunkFiles != null) {
+                for (File chunkFile : chunkFiles) {
+                    try {
+                        // 文件名即为分片的起始位置
+                        long startPosition = Long.parseLong(chunkFile.getName());
+                        uploadedChunks.add(startPosition);
+                    } catch (NumberFormatException e) {
+                        // 忽略无效的文件名
+                        log.warn("不合法的分片文件名称: {}", chunkFile.getName());
+                    }
+                }
+            }
+        }
+        // 按起始位置排序
+        uploadedChunks.sort(Long::compareTo);
+        return uploadedChunks;
     }
 }

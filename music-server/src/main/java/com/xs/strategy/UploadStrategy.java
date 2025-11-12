@@ -3,6 +3,7 @@ package com.xs.strategy;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.List;
 
 /**
  * 上传策略
@@ -40,4 +41,14 @@ public interface UploadStrategy {
      * @throws IOException IO异常
      */
     String mergeFileChunk(String fileId, String fileName, String path) throws IOException;
+
+    /**
+     * 查询已上传的分片范围
+     *
+     * @param fileId 文件唯一标识
+     * @param path   上传路径
+     * @return 已上传的分片起始位置列表
+     */
+    List<Long> getUploadedChunks(String fileId, String path);
+
 }

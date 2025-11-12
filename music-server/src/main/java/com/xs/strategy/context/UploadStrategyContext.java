@@ -7,6 +7,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 
 import static com.xs.enums.UploadModeEnum.getStrategy;
@@ -54,12 +55,23 @@ public class UploadStrategyContext {
      * 合并文件分片
      *
      * @param fileId   文件唯一标识
-     * @param fileName 文件名 (文件名+后缀)
+     * @param fileName 文件名
      * @param path     上传路径
      * @return {@link String} 文件地址
      * @throws IOException IO异常
      */
     public String mergeFileChunk(String fileId, String fileName, String path) throws IOException {
         return uploadStrategyMap.get(getStrategy(uploadMode)).mergeFileChunk(fileId, fileName, path);
+    }
+
+    /**
+     * 查询已上传的分片范围
+     *
+     * @param fileId 文件唯一标识
+     * @param path   上传路径
+     * @return 已上传的分片起始位置列表
+     */
+    public List<Long> getUploadedChunks(String fileId, String path) {
+        return uploadStrategyMap.get(getStrategy(uploadMode)).getUploadedChunks(fileId, path);
     }
 }

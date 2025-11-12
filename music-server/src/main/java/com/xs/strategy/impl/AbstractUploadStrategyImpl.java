@@ -9,6 +9,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.List;
 
 /**
  * 抽象上传模板
@@ -50,6 +51,11 @@ public abstract class AbstractUploadStrategyImpl implements UploadStrategy {
         mergeChunk(path, fileId, fileName);
         // 返回文件访问路径
         return getFileAccessUrl(path + fileName);
+    }
+
+    @Override
+    public List<Long> getUploadedChunks(String fileId, String path) {
+        return getUploadedChunkList(path, fileId);
     }
 
     /**
@@ -98,5 +104,14 @@ public abstract class AbstractUploadStrategyImpl implements UploadStrategy {
      * @return {@link String}
      */
     public abstract String getFileAccessUrl(String filePath);
+
+    /**
+     * 获取已上传的分片列表
+     *
+     * @param path   上传路径
+     * @param fileId 文件唯一标识
+     * @return 已上传的分片起始位置列表
+     */
+    public abstract List<Long> getUploadedChunkList(String path, String fileId);
 
 }
